@@ -1,113 +1,296 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+  const [data, setData] = useState([]);
+  const [selectedBox, setSelectedBox] = useState('');
+  const [boxNames, setBoxNames] = useState([]);
+  const [itemName, setItemName] = useState('');
+  const [itemQty, setItemQty] = useState(1);
+  const [items, setItems] = useState([]);
+  const [hoveredItemIndex, setHoveredItemIndex] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [newBoxName, setNewBoxName] = useState(''); // State for new box name
+
+  const router = useRouter();
+  const boxParam = router.query?.box || '';
+
+  useEffect(() => {
+    async function fetchBoxNames() {
+      try {
+        const response = await fetch('/api/box_names');
+        if (!response.ok) {
+          throw new Error('Failed to fetch box names');
+        }
+        const boxNamesData = await response.json();
+        setBoxNames(boxNamesData);
+
+        // If boxParam is provided, set selectedBox to boxParam
+        if (boxParam) {
+          setSelectedBox(boxParam);
+        } else if (boxNamesData.length > 0) {
+          // If no boxParam is provided but boxNamesData is available, default to the first box
+          setSelectedBox(boxNamesData[0].box_name);
+        }
+      } catch (error) {
+        console.error('Error fetching box names:', error);
+      }
+    }
+
+    fetchBoxNames();
+  }, [boxParam]); // Re-fetch box names if boxParam changes
+
+  useEffect(() => {
+    if (selectedBox) {
+      fetchData(selectedBox, setData);
+    }
+  }, [selectedBox]);
+
+  const fetchData = async (selectedBox, setData) => {
+    try {
+      const response = await fetch(`/api/test?box=${selectedBox}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const jsonData = await response.json();
+      setData(jsonData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  const handleBoxChange = async (event) => {
+    const newSelectedBox = event.target.value;
+    setSelectedBox(newSelectedBox);
+    router.push(`/?box=${newSelectedBox}`);
+
+    if (newSelectedBox) {
+      fetchData(newSelectedBox, setData);
+    }
+  };
+
+  const handleNewBoxInputChange = (event) => {
+    setNewBoxName(event.target.value); // Update new box name state
+  };
+
+  const handleAddNewBox = async () => {
+    if (newBoxName.trim() !== '') {
+      try {
+        const response = await fetch('/api/insert_box', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json', // Set Content-Type header
+          },
+          body: JSON.stringify({
+            boxName: newBoxName.trim(),
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to insert new box');
+        }
+  
+        setBoxNames([...boxNames, { box_name: newBoxName.trim() }]);
+        setNewBoxName(''); // Clear input field
+      } catch (error) {
+        console.error('Error inserting new box:', error);
+      }
+    }
+  };
+  
+
+
+  const handleItemNameChange = (event) => {
+    setItemName(event.target.value);
+  };
+
+  const handleItemQtyChange = (event) => {
+    setItemQty(parseInt(event.target.value)); // Parse the input value as an integer
+  };
+
+  const handleItemQtyChangeForItem = async (event, itemId) => {
+    const newQty = parseInt(event.target.value);
+    if (!isNaN(newQty) && newQty >= 0) {
+      try {
+        const response = await fetch(`/api/update_item_qty?itemId=${itemId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ newQty }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update item quantity');
+        }
+
+        //fetchData();
+      } catch (error) {
+        console.error('Error updating item quantity:', error);
+      }
+      fetchData();
+    }
+  };
+
+  const addItem = async () => {
+    if (itemName && itemQty > 0) {
+      try {
+        const response = await fetch('/api/insert_item', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            box: selectedBox,
+            itemName,
+            itemQty,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to add item');
+        }
+
+        fetchData();
+      } catch (error) {
+        console.error('Error adding item:', error);
+      }
+
+      setItemName('');
+      setItemQty(1);
+    }
+  };
+
+  const handleRemoveItem = async (itemId) => {
+    try {
+      const response = await fetch(`/api/remove_item?itemId=${itemId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove item');
+      }
+
+      fetchData();
+    } catch (error) {
+      console.error('Error removing item:', error);
+    }
+  };
+
+  const handleSearchTermChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const filteredData = data.filter((item) =>
+    item.item_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="overflow-x-auto dark:bg-gray-800 max-w-6xl mx-auto mt-4">
+      <div className="flex justify-between items-center mb-4">
+        <div className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200 flex items-center flex-wrap">
+          <span className="mr-2">Items from</span>
+          <select
+            className="px-3 py-1 rounded-md bg-white dark:bg-gray-700 dark:text-gray-300 mr-2 mb-2"
+            value={selectedBox}
+            onChange={handleBoxChange}
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+            {boxNames.map((box, index) => (
+              <option key={index} value={box.box_name}>{box.box_name}</option>
+            ))}
+          </select>
+          {/* Text input for adding a new box */}
+          <input
+            type="text"
+            placeholder="New box name"
+            value={newBoxName}
+            onChange={handleNewBoxInputChange}
+            className="px-3 py-1 rounded-md bg-white dark:bg-gray-700 dark:text-gray-300 mr-2 mb-2"
+          />
+          <button
+            onClick={handleAddNewBox}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md mb-2"
+          >
+            Add
+          </button>
+          {/* Search input */}
+          <input
+            type="text"
+            placeholder="Search items..."
+            className="px-3 py-1 rounded-md bg-white dark:bg-gray-700 dark:text-gray-300 mb-2"
+            value={searchTerm}
+            onChange={handleSearchTermChange}
+          />
         </div>
       </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      <div className="mb-4 flex flex-wrap">
+        <div className="flex-1 mr-2 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Item Name</label>
+          <input
+            type="text"
+            className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            value={itemName}
+            onChange={handleItemNameChange}
+          />
+        </div>
+        <div className="flex-2 ml-2 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Item Quantity</label>
+          <input
+            type="number"
+            className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            value={itemQty}
+            onChange={handleItemQtyChange}
+          />
+        </div>
+        <button
+          className="px-4 py-2 bg-blue-500 text-white rounded-md ml-2 mb-2"
+          onClick={addItem}
+        >
+          Add
+        </button>
       </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      <table className="w-full divide-y divide-gray-700 dark:divide-gray-400">
+        <thead className="bg-gray-800 dark:bg-gray-700">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">Item Name</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">Item Qty</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700 w-16"></th> {/* Set a fixed width */}
+          </tr>
+        </thead>
+        <tbody className="bg-gray-900 divide-y divide-gray-700 dark:bg-gray-800 dark:divide-gray-400">
+          {filteredData.map((item, index) => (
+            <tr
+              key={item.item_id}
+              className={`bg-${index % 2 === 0 ? 'gray-800' : 'gray-700'} hover:bg-gray-600 dark:hover:bg-gray-700 transition-colors duration-200`}
+              onMouseEnter={() => setHoveredItemIndex(index)}
+              onMouseLeave={() => setHoveredItemIndex(null)}
+            >
+              <td className="px-6 py-4 whitespace-normal text-sm text-gray-300 border-b border-gray-700">{item.item_name}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 border-b border-gray-700">
+                <input
+                  type="number"
+                  className="w-16 border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={item.item_qty}
+                  onChange={(e) => handleItemQtyChangeForItem(e, item.item_id)}
+                />
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 border-b border-gray-700">
+                {hoveredItemIndex === index && (
+                  <button
+                    className="px-2 py-1 bg-red-500 text-white rounded-md"
+                    onClick={() => handleRemoveItem(item.item_id)}
+                  >
+                    X
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
-}
+  }  
