@@ -15,7 +15,7 @@ export async function POST(req) {
 
     // Insert the item into the specified box with the given quantity
     await new Promise((resolve, reject) => {
-      db.query('INSERT INTO items (item_boxid, item_name, item_qty) VALUES ((select box_id from box where box_name = ?), ?, ?)', [box, itemName, itemQty], (error, results, fields) => {
+      db.query('INSERT INTO item (item_boxid, item_name, item_qty) VALUES ((select box_id from box where box_name = ?), ?, ?)', [box, itemName, itemQty], (error, results, fields) => {
         if (error) {
           console.error('Error inserting item into database:', error);
           reject(error);

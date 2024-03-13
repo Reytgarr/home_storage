@@ -6,6 +6,11 @@ module.exports = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    fontFamily: {
+      'sans': ['Arial', 'sans-serif'],
+      'serif': ['Georgia', 'serif'],
+      'mono': ['Ubuntu Mono', 'monospace'], // Define Ubuntu Mono font
+    },
     extend: {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

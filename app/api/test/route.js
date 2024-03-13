@@ -10,7 +10,7 @@ export async function GET(req) {
     const data = await new Promise((resolve, reject) => {
       if (box === 'a') {
         
-        db.query('SELECT * FROM items inner join box on box_id = item_boxid where box_id=1', (error, results, fields) => {
+        db.query('SELECT * FROM item inner join box on box_id = item_boxid where box_id=1', (error, results, fields) => {
           if (error) {
             console.error('Error querying database:', error);
             reject(error);
@@ -20,7 +20,7 @@ export async function GET(req) {
         });
       } else {
         
-        db.query('SELECT * FROM items inner join box on box_id = item_boxid WHERE box_name = ?', [box], (error, results, fields) => {
+        db.query('SELECT * FROM item inner join box on box_id = item_boxid WHERE box_name = ?', [box], (error, results, fields) => {
           if (error) {
             console.error('Error querying database:', error);
             reject(error);

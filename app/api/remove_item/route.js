@@ -9,7 +9,7 @@ export async function DELETE(req) {
 
     // Insert the item into the specified box with the given quantity
     await new Promise((resolve, reject) => {
-      db.query('delete from items where item_id = ?', [item_id], (error, results, fields) => {
+      db.query('delete from item where item_id = ?', [item_id], (error, results, fields) => {
         if (error) {
           console.error('Error deleting item from database:', error);
           reject(error);

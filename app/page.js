@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import bcrypt from 'bcryptjs';
+import Cookies from 'js-cookie';
 
 export default function Counter() {
   const [count, setCount] = useState(0);
@@ -14,9 +17,101 @@ export default function Counter() {
   const [hoveredItemIndex, setHoveredItemIndex] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [newBoxName, setNewBoxName] = useState(''); // State for new box name
-
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
-  const boxParam = router.query?.box || '';
+  const searchParams = useSearchParams();
+  const boxParam = searchParams.get('box');
+
+
+
+
+//register
+
+const handleRegister = async () => {
+  try {
+    const response = await fetch('/api/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username,
+        password: password 
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Registration failed');
+    }
+    router.push('/');
+    setUsername('');
+    setPassword('');
+    // Handle successful registration
+    // For example, redirect to the login page or show a success message
+  } catch (error) {
+    console.error('Error during registration:', error);
+  }
+};
+
+
+//login
+
+useEffect(() => {
+  // Check for the presence of the isLoggedIn cookie
+  const storedLoggedInStatus = Cookies.get('loggedIn');
+  // Update the login state based on the cookie value
+  setIsLoggedIn(storedLoggedInStatus === 'true');
+}, []);
+
+
+const handleLogin = async () => {
+  try {
+    if (!password) {
+      console.error('Password is missing');
+      // Display an error message to the user indicating that the password is required
+      return;
+    }
+    // Send a request to your server to validate user credentials
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username,
+        password: password 
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to authenticate');
+    }
+
+    // If authentication is successful, setLoggedIn(true)
+    setIsLoggedIn(true);
+    Cookies.set('loggedIn', 'true', { expires: 365 });
+    // Redirect the user to the dashboard or desired page
+    router.push('/');
+    setUsername('');
+    setPassword('');
+
+
+  } catch (error) {
+    setError('Invalid username or password');
+  }
+};
+
+  // Function to handle user logout
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    Cookies.remove('loggedIn');
+  };
+
+
 
   useEffect(() => {
     async function fetchBoxNames() {
@@ -64,6 +159,7 @@ export default function Counter() {
 
   const handleBoxChange = async (event) => {
     const newSelectedBox = event.target.value;
+    
     setSelectedBox(newSelectedBox);
     router.push(`/?box=${newSelectedBox}`);
 
@@ -189,7 +285,11 @@ export default function Counter() {
   );
 
   return (
-    <div className="overflow-x-auto dark:bg-gray-800 max-w-6xl mx-auto mt-4">
+    <div>
+      {isLoggedIn ? (
+        <div>
+          <button onClick={handleLogout}>Logout</button>
+    <div className="font-mono overflow-x-auto dark:bg-gray-800 max-w-6xl mx-auto mt-4">
       <div className="flex justify-between items-center mb-4">
         <div className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200 flex items-center flex-wrap">
           <span className="mr-2">Items from</span>
@@ -291,6 +391,50 @@ export default function Counter() {
           ))}
         </tbody>
       </table>
+    </div>
+    </div>
+      ) : (
+<div className="flex items-center justify-center h-screen bg-gray-800">
+      <div className="bg-gray-900 text-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <div className="mb-4">
+          <label className="block text-gray-300 text-sm font-bold mb-2">Username</label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-white-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-700"
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block text-gray-300 text-sm font-bold mb-2">Password</label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-white-700 mb-3 leading-tight focus:outline-none focus:shadow-outline bg-gray-700"
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            type="button"
+            onClick={handleLogin}
+          >
+            Log In
+          </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            type="button"
+            onClick={handleRegister}
+          >
+            Register
+          </button>
+        </div>
+      </div>
+    </div>
+      )}
     </div>
   );
   }  

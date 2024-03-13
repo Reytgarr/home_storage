@@ -8,7 +8,7 @@ export async function PATCH(req) {
 
     // Update the item quantity in the database
     await new Promise((resolve, reject) => {
-      db.query('UPDATE items SET item_qty = ? WHERE item_id = ?', [newQty, itemId], (error, results, fields) => {
+      db.query('UPDATE item SET item_qty = ? WHERE item_id = ?', [newQty, itemId], (error, results, fields) => {
         if (error) {
           console.error('Error updating item quantity in database:', error);
           reject(error);
