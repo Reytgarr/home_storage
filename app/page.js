@@ -209,6 +209,7 @@ const handleLogin = async () => {
 
   const handleItemQtyChangeForItem = async (event, itemId) => {
     const newQty = parseInt(event.target.value);
+    console.log(newQty)
     if (!isNaN(newQty) && newQty >= 0) {
       try {
         const response = await fetch(`/api/update_item_qty?itemId=${itemId}`, {
@@ -285,86 +286,61 @@ const handleLogin = async () => {
   );
 
   return (
-    <div>
-      {isLoggedIn ? (
-        <div>
-          <button onClick={handleLogout}>Logout</button>
-    <div className="font-mono overflow-x-auto dark:bg-gray-800 max-w-6xl mx-auto mt-4">
-      <div className="flex justify-between items-center mb-4">
-        <div className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200 flex items-center flex-wrap">
-          <span className="mr-2">Items from</span>
-          <select
-            className="px-3 py-1 rounded-md bg-white dark:bg-gray-700 dark:text-gray-300 mr-2 mb-2"
-            value={selectedBox}
-            onChange={handleBoxChange}
-          >
-            {boxNames.map((box, index) => (
-              <option key={index} value={box.box_name}>{box.box_name}</option>
-            ))}
-          </select>
-          {/* Text input for adding a new box */}
-          <input
-            type="text"
-            placeholder="New box name"
-            value={newBoxName}
-            onChange={handleNewBoxInputChange}
-            className="px-3 py-1 rounded-md bg-white dark:bg-gray-700 dark:text-gray-300 mr-2 mb-2"
-          />
-          <button
-            onClick={handleAddNewBox}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md mb-2"
-          >
-            Add
-          </button>
-          {/* Search input */}
-          <input
-            type="text"
-            placeholder="Search items..."
-            className="px-3 py-1 rounded-md bg-white dark:bg-gray-700 dark:text-gray-300 mb-2"
-            value={searchTerm}
-            onChange={handleSearchTermChange}
-          />
+    <div className="mx-auto mt-8 max-w-7xl">
+    {isLoggedIn ? (
+      <div className="w-full max-w-4xl mx-auto">
+        <div className='flex items-center justify-end'>
+        <button onClick={handleLogout} className="mr-auto mb-4 px-4 py-2 bg-red-500 text-white rounded-md">Logout</button>
+        <input
+              type="text"
+              placeholder="Search items..."
+              className="px-3 py-1 rounded-md bg-white dark:bg-gray-700 dark:text-gray-300 mb-2"
+              value={searchTerm}
+              onChange={handleSearchTermChange}
+            />
         </div>
-      </div>
-      <div className="mb-4 flex flex-wrap">
-        <div className="flex-1 mr-2 mb-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Item Name</label>
-          <input
-            type="text"
-            className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            value={itemName}
-            onChange={handleItemNameChange}
-          />
-        </div>
-        <div className="flex-2 ml-2 mb-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Item Quantity</label>
-          <input
-            type="number"
-            className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            value={itemQty}
-            onChange={handleItemQtyChange}
-          />
-        </div>
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded-md ml-2 mb-2"
-          onClick={addItem}
-        >
-          Add
-        </button>
-      </div>
+        <div className="bg-gray-900 dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="flex items-center justify-between bg-gray-800 dark:bg-gray-700 px-4 py-3">
+            <div className="flex items-center">
+              <span className="text-lg font-bold text-gray-200 mr-2">Items from</span>
+              <select
+                className="px-3 py-1 rounded-md bg-white dark:bg-gray-700 dark:text-gray-300 mr-2 mb-2"
+                value={selectedBox}
+                onChange={handleBoxChange}
+              >
+                {boxNames.map((box, index) => (
+                  <option key={index} value={box.box_name}>{box.box_name}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="New box name"
+                value={newBoxName}
+                onChange={handleNewBoxInputChange}
+                className="px-3 py-1 rounded-md bg-white dark:bg-gray-700 dark:text-gray-300 mr-2 mb-2"
+              />
+              <button
+                onClick={handleAddNewBox}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md mb-2"
+              >
+                Add
+              </button>
+            </div>
+
+          </div>
       <table className="w-full divide-y divide-gray-700 dark:divide-gray-400">
-        <thead className="bg-gray-800 dark:bg-gray-700">
+        <thead className="bg-gray-800 dark:bg-gray-800">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">Item Name</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">Item Qty</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700 w-16"></th> {/* Set a fixed width */}
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700 w-3/5">Item Name</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700 w-1/5">Item Qty</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700 w-1/5"></th> {/* Set a fixed width */}
           </tr>
         </thead>
         <tbody className="bg-gray-900 divide-y divide-gray-700 dark:bg-gray-800 dark:divide-gray-400">
           {filteredData.map((item, index) => (
             <tr
               key={item.item_id}
-              className={`bg-${index % 2 === 0 ? 'gray-800' : 'gray-700'} hover:bg-gray-600 dark:hover:bg-gray-700 transition-colors duration-200`}
+              className={`bg-${index % 2 === 0 ? 'gray-700' : 'gray-800'} hover:bg-gray-700 dark:hover:bg-gray-800 transition-colors duration-200`}
               onMouseEnter={() => setHoveredItemIndex(index)}
               onMouseLeave={() => setHoveredItemIndex(null)}
             >
@@ -380,7 +356,7 @@ const handleLogin = async () => {
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 border-b border-gray-700">
                 {hoveredItemIndex === index && (
                   <button
-                    className="px-2 py-1 bg-red-500 text-white rounded-md"
+                    className="px-2 bg-red-500 text-white rounded-md"
                     onClick={() => handleRemoveItem(item.item_id)}
                   >
                     X
@@ -391,6 +367,34 @@ const handleLogin = async () => {
           ))}
         </tbody>
       </table>
+      <div className="py-2 max-w-3xl mx-auto">
+  <div className="flex items-center justify-end"> {/* Center items horizontally */}
+    <div className="w-2/5 mr-2"> {/* Set width for item name */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Item Name</label>
+      <input
+        type="text"
+        className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        value={itemName}
+        onChange={handleItemNameChange}
+      />
+    </div>
+    <div className="w-24 mr-2"> {/* Set width for item quantity */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Item Quantity</label>
+      <input
+        type="number"
+        className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        value={itemQty}
+        onChange={handleItemQtyChange}
+      />
+    </div>
+    <button
+      className="px-4 py-2 bg-blue-500 text-white rounded-md ml-2 "
+      onClick={addItem}
+    >
+      Add
+    </button>
+  </div>
+</div>
     </div>
     </div>
       ) : (
