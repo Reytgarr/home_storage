@@ -25,6 +25,8 @@ export default function Counter() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const boxParam = searchParams.get('box');
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [editedItemName, setEditedItemName] = useState('');
 
 
 
@@ -209,7 +211,7 @@ const handleLogin = async () => {
 
   const handleItemQtyChangeForItem = async (event, itemId) => {
     const newQty = parseInt(event.target.value);
-    console.log(newQty)
+    
     if (!isNaN(newQty) && newQty >= 0) {
       try {
         const response = await fetch(`/api/update_item_qty?itemId=${itemId}`, {
@@ -217,18 +219,21 @@ const handleLogin = async () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ newQty }),
+          body: JSON.stringify({ 
+            newQty,
+            username 
+          }),
         });
 
         if (!response.ok) {
           throw new Error('Failed to update item quantity');
         }
+        
 
-        //fetchData();
       } catch (error) {
         console.error('Error updating item quantity:', error);
       }
-      fetchData();
+      fetchData(selectedBox, setData);
     }
   };
 
@@ -280,10 +285,37 @@ const handleLogin = async () => {
   const handleSearchTermChange = (event) => {
     setSearchTerm(event.target.value);
   };
+  
 
   const filteredData = data.filter((item) =>
     item.item_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleEditItemName = (itemId, itemName) => {
+    setEditingItemId(itemId);
+    setEditedItemName(itemName);
+  };
+  
+  const handleSaveItemName = async (itemId) => {
+    try {
+      const response = await fetch(`/api/update_item_name?itemId=${itemId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ newName: editedItemName }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to update item name');
+      }
+  
+      fetchData(selectedBox, setData); // Fetch updated data
+      setEditingItemId(null); // Exit edit mode
+    } catch (error) {
+      console.error('Error updating item name:', error);
+    }
+  };
 
   return (
     <div className="mx-auto mt-8 max-w-7xl">
@@ -337,14 +369,30 @@ const handleLogin = async () => {
           </tr>
         </thead>
         <tbody className="bg-gray-900 divide-y divide-gray-700 dark:bg-gray-800 dark:divide-gray-400">
-          {filteredData.map((item, index) => (
-            <tr
-              key={item.item_id}
-              className={`bg-${index % 2 === 0 ? 'gray-700' : 'gray-800'} hover:bg-gray-700 dark:hover:bg-gray-800 transition-colors duration-200`}
-              onMouseEnter={() => setHoveredItemIndex(index)}
-              onMouseLeave={() => setHoveredItemIndex(null)}
-            >
-              <td className="px-6 py-4 whitespace-normal text-sm text-gray-300 border-b border-gray-700">{item.item_name}</td>
+        {filteredData.map((item, index) => (
+  <tr
+    key={item.item_id}
+    className={`bg-${index % 2 === 0 ? 'gray-700' : 'gray-800'} hover:bg-gray-700 dark:hover:bg-gray-800 transition-colors duration-200`}
+    onMouseEnter={() => setHoveredItemIndex(index)}
+    onMouseLeave={() => setHoveredItemIndex(null)}
+  >
+    <td
+      className="px-6 py-4 whitespace-normal text-sm text-gray-300 border-b border-gray-700"
+      onDoubleClick={() => handleEditItemName(item.item_id, item.item_name)}
+    >
+      {editingItemId === item.item_id ? (
+        <input
+          type="text"
+          className={`bg-${index % 2 === 0 ? 'gray-700' : 'gray-800'} whitespace-normal text-sm text-gray-300 border-b border-gray-700 w-full `}
+          value={editedItemName}
+          onChange={(e) => setEditedItemName(e.target.value)}
+          onBlur={() => handleSaveItemName(item.item_id)}
+          autoFocus // Autofocus on the input field when it's rendered
+        />
+      ) : (
+        <span>{item.item_name}</span>
+      )}
+    </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 border-b border-gray-700">
                 <input
                   type="number"

@@ -4,14 +4,13 @@ import { NextResponse } from 'next/server';
 export async function PATCH(req) {
   try {
     const itemId = req.nextUrl.searchParams.get('itemId');
-    const { newQty } = await req.json(); // Extract newQty from the request body
-    
+    const { newName } = await req.json(); // Extract newName from the request body
 
-    // Update the item quantity in the database
+    // Update the item name in the database
     await new Promise((resolve, reject) => {
-      db.query('UPDATE item SET item_qty = ? WHERE item_id = ?', [newQty, itemId], (error, results, fields) => {
+      db.query('UPDATE item SET item_name = ? WHERE item_id = ?', [newName, itemId], (error, results, fields) => {
         if (error) {
-          console.error('Error updating item quantity in database:', error);
+          console.error('Error updating item name in database:', error);
           reject(error);
           return;
         }
@@ -19,9 +18,8 @@ export async function PATCH(req) {
       });
     });
 
-    
     // Send a success response with status 200
-    return NextResponse.json({ message: 'Item quantity updated successfully' }, { status: 200 });
+    return NextResponse.json({ message: 'Item name updated successfully' }, { status: 200 });
   } catch (error) {
     console.error('Error handling PATCH request:', error);
     // Return an error response with status 500
