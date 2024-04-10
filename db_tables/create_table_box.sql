@@ -1,0 +1,7 @@
+CREATE TABLE `box` (
+	`box_id` INT(10) NOT NULL AUTO_INCREMENT,
+	`box_name` VARCHAR(50) NOT NULL COLLATE 'utf8mb4_uca1400_ai_ci',
+	PRIMARY KEY (`box_id`) USING BTREE
+)
+ENGINE=InnoDB
+;
